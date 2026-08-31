@@ -14,6 +14,9 @@ function results_show_new($atts) {
     // Подключение к базе данных
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
     
     // Получение данных о сезоне
     $season = mysqli_fetch_row(mysqli_query($link, "SELECT * FROM appsettings"));    
@@ -202,6 +205,9 @@ function ajax_get_class_results() {
     // Получаем данные о сезоне для minParticipants
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
     
     $rows_cp = mysqli_fetch_all(
         mysqli_query($link, "SELECT * FROM seasons WHERE season_id = '$season_id'"),
@@ -223,6 +229,9 @@ function generate_results_table($season_id, $class_name, $minParticipants) {
     
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
     
     // Получение данных о событиях
     $rows_ev = mysqli_fetch_all(
@@ -261,7 +270,7 @@ function generate_results_table($season_id, $class_name, $minParticipants) {
     }
     
     // Формирование SQL запроса для участников
-    $sql = "SELECT p.participant_id, p.participants_name, p.car, p.num, s.countPart";
+    $sql = "SELECT p.participant_id, p.participants_name, p.city, p.car, p.num, s.countPart";
     $i=1;
     
     foreach ($rows_ev as $k){
@@ -347,6 +356,7 @@ function generate_results_table($season_id, $class_name, $minParticipants) {
                       <th rowspan=\"2\" class=\"has-text-align-center\" data-align=\"center\">Место</th>
                       <th rowspan=\"2\" class=\"has-text-align-center\" data-align=\"center\">Стартовый<br>номер</th>
                       <th rowspan=\"2\" class=\"has-text-align-center\" data-align=\"center\">Фамилия Имя Пилот/Штурман</th>
+                      <th rowspan=\"2\" class=\"has-text-align-center\" data-align=\"center\">Город</th>
                       <th rowspan=\"2\" class=\"has-text-align-center\" data-align=\"center\">Автомобиль</th>";
     
     for ($n = 1; $n <= $count_event; $n++) {
@@ -380,6 +390,7 @@ function generate_results_table($season_id, $class_name, $minParticipants) {
             <td aria-label=\"Место\" class=\"has-text-align-center results_place\" data-align=\"center\">$m</td>
             <td aria-label=\"Стартовый номер\" class=\"has-text-align-center\" data-align=\"center\">{$row['num']}</td>
             <td aria-label=\"ФИО Пилот/Штурман\" class=\"has-text-align-center\" data-align=\"center\">{$row['participants_name']}</td>
+            <td aria-label=\"Город\" class=\"has-text-align-center\" data-align=\"center\">{$row['city']}</td>
             <td aria-label=\"Автомобиль\" class=\"has-text-align-center scores-border\" data-align=\"center\">
                 {$row['car']}<br>
             </td>";

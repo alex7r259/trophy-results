@@ -2,7 +2,7 @@
 function results_show_single_event($atts) {
     // Инициализация параметров
     $defaults = [
-        'event_id' => 1,
+        'event_id' => get_query_var('event_id') ?: 1,
         'season_id' => get_query_var('season_id') ?: 1,
         'class_name' => get_query_var('class_name') ?: 'Полироль'
     ];
@@ -12,6 +12,9 @@ function results_show_single_event($atts) {
     $db = new mysqli("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
     if ($db->connect_error) {
         return "Ошибка подключения к базе данных";
+    }
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($db);
     }
 
     // Получаем список классов
@@ -33,7 +36,8 @@ function results_show_single_event($atts) {
     // Формируем SQL запрос
     $select_fields = [
         "p.participant_id",
-        "p.participants_name", 
+        "p.participants_name",
+        "p.city", 
         "p.num",
         "p.car"
     ];
@@ -59,7 +63,7 @@ function results_show_single_event($atts) {
         JOIN Participants p ON er.participant_id = p.participant_id
         JOIN Class c ON er.class_id = c.class_id
         WHERE c.class_name = '%s' AND er.event_id = %d
-        GROUP BY p.participant_id, p.participants_name, p.num, p.car
+        GROUP BY p.participant_id, p.participants_name, p.city, p.num, p.car
         ORDER BY total_scores DESC, total_time ASC",
         implode(', ', array_merge($select_fields, $case_statements)),
         $db->real_escape_string($params['class_name']),
@@ -75,8 +79,6 @@ function results_show_single_event($atts) {
         return "Ошибка при получении данных";
     }
     $participants = $result->fetch_all(MYSQLI_ASSOC);
-    var_dump($participants);
-    
     // Генерируем ссылки на классы
     $current_url = home_url();
     $class_links = array_map(function($class) use ($params, $current_url) {
@@ -95,6 +97,7 @@ function results_show_single_event($atts) {
         'place' => true,
         'num' => !empty(array_column($participants, 'num')),
         'participants_name' => true,
+        'city' => !empty(array_filter(array_column($participants, 'city'))),
         'car' => !empty(array_column($participants, 'car'))
     ];
     
@@ -113,6 +116,9 @@ function results_show_single_event($atts) {
                         <th class="has-text-align-center" rowspan="2">№</th>
                     <?php endif; ?>
                     <th class="has-text-align-center" rowspan="2">Участник</th>
+                    <?php if ($visible_columns['city']): ?>
+                        <th class="has-text-align-center" rowspan="2">Город</th>
+                    <?php endif; ?>
                     <?php if ($visible_columns['car']): ?>
                         <th class="has-text-align-center" rowspan="2">Автомобиль</th>
                     <?php endif; ?>
@@ -148,12 +154,15 @@ function results_show_single_event($atts) {
                 ?>
                     <tr>
                         <?php if ($visible_columns['place']): ?>
-                            <td class="has-text-align-center"><?= $position ?></td>
+                            <td class="has-text-align-center"><?= esc_html($position) ?></td>
                         <?php endif; ?>
                         <?php if ($visible_columns['num']): ?>
                             <td class="has-text-align-center"><?= esc_html($row['num']) ?></td>
                         <?php endif; ?>
                         <td class="has-text-align-center"><?= esc_html($row['participants_name']) ?></td>
+                        <?php if ($visible_columns['city']): ?>
+                            <td class="has-text-align-center"><?= esc_html($row['city'] ?? '') ?></td>
+                        <?php endif; ?>
                         <?php if ($visible_columns['car']): ?>
                             <td class="has-text-align-center"><?= esc_html($row['car']) ?></td>
                         <?php endif; ?>
@@ -168,12 +177,12 @@ function results_show_single_event($atts) {
                         <?php endforeach; ?>
                     </tr>
                     <tr class="total-row">
-                        <td colspan="<?= count($visible_columns) ?>" class="has-text-align-right">Итого:</td>
+                        <td colspan="<?= count(array_filter($visible_columns)) ?>" class="has-text-align-right">Итого:</td>
                         <?php foreach ($stages as $n => $stage): ?>
                             <?php if ($n === count($stages) - 1): ?>
                                 <td colspan="4" class="has-text-align-center">
-                                    <strong>Баллы: <?= $row['total_scores'] ?></strong><br>
-                                    <strong>Время: <?= $row['total_time'] ?></strong>
+                                    <strong>Баллы: <?= esc_html($row['total_scores']) ?></strong><br>
+                                    <strong>Время: <?= esc_html($row['total_time']) ?></strong>
                                 </td>
                             <?php else: ?>
                                 <td colspan="4"></td>

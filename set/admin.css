@@ -1,0 +1,145 @@
+.results-admin-wrap {
+    --results-primary: #2563eb;
+    --results-primary-dark: #1d4ed8;
+    --results-surface: #ffffff;
+    --results-muted: #64748b;
+    --results-border: #dbe3ef;
+    --results-bg: #f6f8fb;
+    margin: 24px 20px 0 2px;
+}
+.results-admin-shell {
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 44%, #f8fafc 100%);
+    border: 1px solid var(--results-border);
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .08);
+    overflow: hidden;
+}
+.results-admin-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--results-border);
+}
+.results-admin-eyebrow {
+    margin: 0 0 8px;
+    color: var(--results-primary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.results-admin-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 30px;
+    line-height: 1.2;
+}
+.results-admin-description {
+    max-width: 720px;
+    margin: 10px 0 0;
+    color: var(--results-muted);
+    font-size: 15px;
+}
+.results-admin-badge {
+    align-self: flex-start;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.results-admin-content {
+    padding: 26px 32px 32px;
+}
+.results-admin-toolbar,
+.results-admin-card {
+    background: rgba(255,255,255,.92);
+    border: 1px solid var(--results-border);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+}
+.results-admin-toolbar {
+    margin-bottom: 20px;
+    padding: 18px;
+}
+.results-admin-wrap select,
+.results-admin-wrap input[type="text"],
+.results-admin-wrap input[type="number"],
+.results-admin-wrap input[type="date"] {
+    min-height: 40px;
+    border-color: #cbd5e1;
+    border-radius: 10px;
+    box-shadow: none;
+}
+.results-admin-wrap .button.button-primary,
+.results-admin-wrap #save_new,
+.results-admin-wrap #save {
+    border: 0;
+    border-radius: 10px;
+    background: var(--results-primary);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(37,99,235,.24);
+    cursor: pointer;
+}
+.results-admin-wrap #save_new { display: inline-flex; padding: 8px 12px; margin: 0; }
+.results-admin-wrap .button.button-primary:hover,
+.results-admin-wrap #save_new:hover,
+.results-admin-wrap #save:hover { background: var(--results-primary-dark); }
+.results-admin-table-scroll, .results-admin-wrap #table_events {
+    overflow: auto;
+    border-radius: 18px;
+}
+.results-admin-wrap .admin_table {
+    width: 100%;
+    min-width: 760px;
+    margin: 0 0 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    background: var(--results-surface);
+    border: 1px solid var(--results-border);
+    border-radius: 18px;
+}
+.results-admin-wrap .admin_table thead th {
+    padding: 14px 16px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.results-admin-wrap .admin_table tbody td {
+    padding: 13px 16px;
+    border-top: 1px solid #edf2f7;
+    color: #1f2937;
+    font-size: 14px;
+    text-align: center;
+    vertical-align: middle;
+}
+.results-admin-wrap .admin_table tbody tr:nth-child(even) { background: #f8fafc; }
+.results-admin-wrap .admin_table tbody tr:hover { background: #eef6ff; }
+.results-admin-wrap [id^="del"], .results-admin-wrap .edit-btn, .results-admin-wrap .delete-btn,
+.results-admin-wrap .save-btn, .results-admin-wrap .cancel-btn { cursor: pointer; transition: transform .15s ease; }
+.results-admin-wrap [id^="del"]:hover, .results-admin-wrap .edit-btn:hover, .results-admin-wrap .delete-btn:hover,
+.results-admin-wrap .save-btn:hover, .results-admin-wrap .cancel-btn:hover { transform: scale(1.12); }
+.results-admin-wrap #message .updated,
+.results-admin-wrap #message .error,
+.results-admin-wrap #message p,
+.results-admin-wrap #message em {
+    display: block;
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border-left: 4px solid #22c55e;
+    background: #f0fdf4;
+}
+.results-admin-wrap #message .error { border-left-color: #ef4444; background: #fef2f2; }
+@media (max-width: 782px) {
+    .results-admin-hero { flex-direction: column; padding: 22px; }
+    .results-admin-content { padding: 20px; }
+    .results-admin-title { font-size: 24px; }
+}
