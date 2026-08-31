@@ -2,7 +2,7 @@
 function results_show_single_event($atts) {
     // Инициализация параметров
     $defaults = [
-        'event_id' => 1,
+        'event_id' => get_query_var('event_id') ?: 1,
         'season_id' => get_query_var('season_id') ?: 1,
         'class_name' => get_query_var('class_name') ?: 'Полироль'
     ];
@@ -75,8 +75,6 @@ function results_show_single_event($atts) {
         return "Ошибка при получении данных";
     }
     $participants = $result->fetch_all(MYSQLI_ASSOC);
-    var_dump($participants);
-    
     // Генерируем ссылки на классы
     $current_url = home_url();
     $class_links = array_map(function($class) use ($params, $current_url) {
@@ -148,7 +146,7 @@ function results_show_single_event($atts) {
                 ?>
                     <tr>
                         <?php if ($visible_columns['place']): ?>
-                            <td class="has-text-align-center"><?= $position ?></td>
+                            <td class="has-text-align-center"><?= esc_html($position) ?></td>
                         <?php endif; ?>
                         <?php if ($visible_columns['num']): ?>
                             <td class="has-text-align-center"><?= esc_html($row['num']) ?></td>
@@ -168,12 +166,12 @@ function results_show_single_event($atts) {
                         <?php endforeach; ?>
                     </tr>
                     <tr class="total-row">
-                        <td colspan="<?= count($visible_columns) ?>" class="has-text-align-right">Итого:</td>
+                        <td colspan="<?= count(array_filter($visible_columns)) ?>" class="has-text-align-right">Итого:</td>
                         <?php foreach ($stages as $n => $stage): ?>
                             <?php if ($n === count($stages) - 1): ?>
                                 <td colspan="4" class="has-text-align-center">
-                                    <strong>Баллы: <?= $row['total_scores'] ?></strong><br>
-                                    <strong>Время: <?= $row['total_time'] ?></strong>
+                                    <strong>Баллы: <?= esc_html($row['total_scores']) ?></strong><br>
+                                    <strong>Время: <?= esc_html($row['total_time']) ?></strong>
                                 </td>
                             <?php else: ?>
                                 <td colspan="4"></td>

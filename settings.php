@@ -1,5 +1,69 @@
 <?php
 
+
+function results_is_plugin_admin_page($hook) {
+    return $hook === 'toplevel_page_results' || strpos($hook, '_page_results_') !== false;
+}
+
+function results_admin_assets($hook) {
+    if (!results_is_plugin_admin_page($hook)) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'results-admin-css',
+        plugins_url('set/admin.css', __FILE__),
+        array(),
+        filemtime(plugin_dir_path(__FILE__) . 'set/admin.css')
+    );
+}
+
+function results_render_admin_page() {
+    $title = get_admin_page_title();
+    ?>
+    <div class="wrap results-admin-wrap">
+        <div class="results-admin-shell">
+            <div class="results-admin-hero">
+                <div>
+                    <p class="results-admin-eyebrow">Trophy Results</p>
+                    <h1 class="results-admin-title"><?php echo esc_html($title); ?></h1>
+                    <p class="results-admin-description">Управляйте сезонами, этапами, участниками и результатами в едином интерфейсе. Дважды кликните по ячейке таблицы, чтобы быстро отредактировать значение.</p>
+                </div>
+                <div class="results-admin-badge">Админ-панель</div>
+            </div>
+            <div class="results-admin-content">
+                <div class="results-admin-toolbar" id="body"></div>
+                <div id="message" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+
+function results_allowed_columns_for_table($table) {
+    $columns = array(
+        'appsettings' => array('id', 'season_id', 'event_id', 'pass'),
+        'events' => array('event_id', 'event_name', 'event_date', 'season_id', 'coefficient'),
+        'participants' => array('participant_id', 'participants_name', 'season_id', 'car', 'num'),
+        'seasons' => array('season_id', 'season_name', 'countPlace', 'countPart'),
+        'results' => array('results_id', 'season_id', 'event_id', 'class_id', 'participant_id', 'points_id', 'missing', 'disq'),
+        'class' => array('class_id', 'class_name', 'season_id'),
+        'pointstable' => array('points_id', 'season_id', 'position', 'points'),
+    );
+
+    return $columns[$table] ?? array();
+}
+
+function results_validate_table_column($table, $column = null) {
+    $allowed_columns = results_allowed_columns_for_table($table);
+    if (empty($allowed_columns)) {
+        return false;
+    }
+
+    return $column === null || in_array($column, $allowed_columns, true);
+}
+
 function results_settings() {
     add_menu_page(
         'Настройки турнира',
@@ -74,6 +138,8 @@ function results_settings() {
         'results_settings_result'
     );    
     
+    add_action('admin_enqueue_scripts', 'results_admin_assets');
+
     // Добавляем скрипты с nonce
     add_action('admin_enqueue_scripts', 'add_season_admin_scripts');
     add_action('admin_enqueue_scripts', 'add_part_admin_scripts');
@@ -123,7 +189,10 @@ function load_table() {
     }	
     $table = sanitize_text_field($_POST['table']);
     $col = sanitize_text_field($_POST['col']);
-    $id = intval($_POST['id']);	
+    $id = intval($_POST['id']);
+    if (!results_validate_table_column($table, $col)) {
+        wp_send_json_error('Недопустимая таблица или столбец');
+    }
     try {
         $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
         $query = mysqli_query($link, 
@@ -220,18 +289,11 @@ function col_delete() {
         wp_send_json_error('Не переданы table, col или id');
     }
     // Валидация и санитизация данных
-    $allowed_tables = ['events', 'participants', 'seasons', 'results', 'class', 'pointstable']; // Белый список таблиц
     $table = sanitize_text_field($_POST['table']);
     $col = sanitize_text_field($_POST['col']);
     $id = intval($_POST['id']);
-    // Проверка, что таблица разрешена
-    if (!in_array($table, $allowed_tables)) {
-        wp_send_json_error('Недопустимая таблица');
-    }
-    // Проверка, что столбец допустим (опционально)
-    $allowed_columns = ['event_id', 'participant_id', 'season_id', 'results_id', 'class_id', 'points_id']; // Пример
-    if (!in_array($col, $allowed_columns)) {
-        wp_send_json_error('Недопустимый столбец');
+    if (!results_validate_table_column($table, $col)) {
+        wp_send_json_error('Недопустимая таблица или столбец');
     }
     try {
         $link = db_connect(); // Ваша функция подключения
@@ -275,10 +337,8 @@ function col_save() {
         wp_send_json_error('Не переданы необходимые параметры');
     }
     // Валидация и санитизация данных
-    $allowed_tables = ['events', 'participants', 'seasons', 'results', 'class', 'pointstable']; // Белый список таблиц
     $table = sanitize_text_field($_POST['table']);
-    // Проверка, что таблица разрешена
-    if (!in_array($table, $allowed_tables)) {
+    if (!results_validate_table_column($table)) {
         wp_send_json_error('Недопустимая таблица');
     }
     // Подготовка данных для запроса
@@ -290,6 +350,9 @@ function col_save() {
     foreach ($_POST['variables'] as $key => $value) {
         $key = sanitize_text_field($key);
         $value = sanitize_text_field($value);        
+        if (!results_validate_table_column($table, $key)) {
+            wp_send_json_error('Недопустимый столбец');
+        }
         $columns[] = "`$key`";
         $values[] = $value;
         $placeholders[] = '?';
@@ -345,15 +408,12 @@ function update_table() {
     }
     
     // 3. Валидация и санитизация данных
-    $allowed_tables = ['events', 'participants', 'seasons', 'class', 'pointstable']; // Белый список таблиц
     $table = sanitize_text_field($_POST['table']);
-    
-    // Проверка допустимости таблицы
-    if (!in_array($table, $allowed_tables)) {
-        wp_send_json_error('Недопустимая таблица', 403);
-    }
-    
     $field = sanitize_text_field($_POST['field']);
+    $col = sanitize_text_field($_POST['col']);
+    if (!results_validate_table_column($table, $field) || !results_validate_table_column($table, $col)) {
+        wp_send_json_error('Недопустимая таблица или столбец', 403);
+    }
     
     // 4. Подключение к базе данных
     $link = db_connect();
@@ -371,7 +431,6 @@ function update_table() {
         
         // 6. Подготовка значения
         $id = intval($_POST['id']);
-        $col = sanitize_text_field($_POST['col']);
         $value = $_POST['value'];
         
         // Специальная обработка для разных типов данных
@@ -432,7 +491,10 @@ function update_settings() {
     }
     // Валидация и санитизация данных
     $table = sanitize_text_field($_POST['table']);
-    
+    if ($table !== 'appsettings') {
+        wp_send_json_error('Недопустимая таблица');
+    }
+
     try {
         $link = db_connect();
         if (!$link) {
@@ -443,7 +505,7 @@ function update_settings() {
         $query = "UPDATE `$table` SET 
         `season_id` = " . intval($_POST['season_id']) . ", 
         `event_id` = " . intval($_POST['event_id']) . ", 
-        `pass` = '" . $_POST['pass'] . "' 
+        `pass` = '" . mysqli_real_escape_string($link, sanitize_text_field($_POST['pass'])) . "' 
         WHERE `id` = 1";
         
         if (!mysqli_query($link, $query)) {
