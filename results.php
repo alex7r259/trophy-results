@@ -14,8 +14,10 @@ function add_custom_query_vars($vars) {
 
 add_filter('query_vars', 'add_custom_query_vars');
 
+register_activation_hook(__FILE__, 'results_install_stage_sections_schema');
 add_action( 'admin_menu', 'results_settings', 25 );
 include 'settings.php';
+include 'includes/section-results.php';
 
 // Зарегистрируйте шорткод с обновленной функцией
 add_shortcode('results_201', 'results_show_new');

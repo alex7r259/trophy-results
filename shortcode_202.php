@@ -17,6 +17,14 @@ function results_show_single_event($atts) {
         results_ensure_participants_city_column($db);
     }
 
+    if (function_exists('results_render_section_stage_protocol')) {
+        $section_protocol = results_render_section_stage_protocol((int)$params['event_id'], (int)$params['season_id'], $params['class_name']);
+        if ($section_protocol !== '') {
+            $db->close();
+            return $section_protocol;
+        }
+    }
+
     // Получаем список классов
     $classes = $db->query("SELECT class_name FROM class WHERE season_id = ".(int)$params['season_id'])
                 ->fetch_all(MYSQLI_ASSOC);
