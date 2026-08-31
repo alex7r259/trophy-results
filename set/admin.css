@@ -50,9 +50,7 @@
     font-weight: 700;
     white-space: nowrap;
 }
-.results-admin-content {
-    padding: 26px 32px 32px;
-}
+.results-admin-content { padding: 26px 32px 32px; }
 .results-admin-toolbar,
 .results-admin-card {
     background: rgba(255,255,255,.92);
@@ -60,10 +58,7 @@
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
 }
-.results-admin-toolbar {
-    margin-bottom: 20px;
-    padding: 18px;
-}
+.results-admin-toolbar { margin-bottom: 20px; padding: 18px; }
 .results-admin-wrap select,
 .results-admin-wrap input[type="text"],
 .results-admin-wrap input[type="number"],
@@ -88,7 +83,11 @@
 .results-admin-wrap #save_new:hover,
 .results-admin-wrap #save:hover { background: var(--results-primary-dark); }
 .results-admin-table-scroll, .results-admin-wrap #table_events {
-    overflow: auto;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
     border-radius: 18px;
 }
 .results-admin-wrap .admin_table {
@@ -102,6 +101,7 @@
     border: 1px solid var(--results-border);
     border-radius: 18px;
 }
+.results-admin-table-scroll .admin_table { width: max-content; }
 .results-admin-wrap .admin_table thead th {
     padding: 14px 16px;
     background: #0f172a;
@@ -111,6 +111,7 @@
     text-align: center;
     text-transform: uppercase;
     letter-spacing: .03em;
+    white-space: nowrap;
 }
 .results-admin-wrap .admin_table tbody td {
     padding: 13px 16px;
@@ -126,6 +127,15 @@
 .results-admin-wrap .save-btn, .results-admin-wrap .cancel-btn { cursor: pointer; transition: transform .15s ease; }
 .results-admin-wrap [id^="del"]:hover, .results-admin-wrap .edit-btn:hover, .results-admin-wrap .delete-btn:hover,
 .results-admin-wrap .save-btn:hover, .results-admin-wrap .cancel-btn:hover { transform: scale(1.12); }
+.results-admin-wrap .delete-section {
+    border: 0;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #991b1b;
+    cursor: pointer;
+}
+.results-admin-wrap .delete-section:hover { background: #fecaca; }
 .results-admin-wrap #message .updated,
 .results-admin-wrap #message .error,
 .results-admin-wrap #message p,
@@ -142,4 +152,5 @@
     .results-admin-hero { flex-direction: column; padding: 22px; }
     .results-admin-content { padding: 20px; }
     .results-admin-title { font-size: 24px; }
+    .results-admin-wrap .admin_table { min-width: 760px; }
 }
