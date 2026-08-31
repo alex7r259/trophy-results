@@ -50,6 +50,9 @@ function results_allowed_columns_for_table($table) {
         'results' => array('results_id', 'season_id', 'event_id', 'class_id', 'participant_id', 'points_id', 'missing', 'disq'),
         'class' => array('class_id', 'class_name', 'season_id'),
         'pointstable' => array('points_id', 'season_id', 'position', 'points'),
+        'stage_sections' => array('section_id', 'event_id', 'section_number', 'section_name', 'description', 'scoring_type', 'points_source', 'uses_checkpoint_points', 'max_checkpoints', 'max_time', 'rules_config'),
+        'stage_section_categories' => array('id', 'section_id', 'class_id', 'display_order', 'scoring_type_override', 'rules_config_override'),
+        'stage_section_results' => array('section_result_id', 'section_id', 'class_id', 'participant_id', 'checkpoints_count', 'checkpoint_points', 'raw_time', 'penalty_points', 'penalty_time', 'calculated_place', 'calculated_points', 'manual_place', 'manual_points', 'final_place', 'final_points', 'status', 'manual_status', 'final_status', 'note'),
     );
 
     return $columns[$table] ?? array();
@@ -156,6 +159,15 @@ function results_settings() {
         'manage_options',
         'results_result',
         'results_settings_result'
+    );
+
+    add_submenu_page(
+        'results',
+        'Подробные результаты СУ',
+        'Результаты СУ',
+        'manage_options',
+        'results_sections',
+        'results_settings_sections'
     );    
     
     add_action('admin_enqueue_scripts', 'results_admin_assets');
@@ -168,6 +180,7 @@ function results_settings() {
     add_action('admin_enqueue_scripts', 'add_result_admin_scripts');
     add_action('admin_enqueue_scripts', 'add_class_admin_scripts');
     add_action('admin_enqueue_scripts', 'add_point_admin_scripts');
+    add_action('admin_enqueue_scripts', 'add_sections_admin_scripts');
     
 }
 
@@ -583,3 +596,4 @@ include 'set/setApp.php';
 include 'set/setResult.php';
 include 'set/setClass.php';
 include 'set/setPoint.php';
+include 'set/setSections.php';
