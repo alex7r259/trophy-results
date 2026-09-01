@@ -40,9 +40,35 @@ function results_show_stage_sections($atts) {
  <div class="results-info"><strong><?php echo esc_html($event['event_name']); ?></strong><?php if(!empty($event['event_date'])): ?> — <?php echo esc_html($event['event_date']); ?><?php endif; ?></div>
  <?php if(!$sections): ?><p class="error">Подробные результаты СУ пока не опубликованы.</p><?php else: ?>
  <div class="table-responsive"><figure class="wp-block-table is-style-stripes"><table class="delivery results-table stage-results-204">
-  <thead><tr><th rowspan="2" class="has-text-align-center">Место</th><th rowspan="2" class="has-text-align-center">Стартовый<br>номер</th><th rowspan="2">Фамилия Имя<br>Пилот/Штурман</th><th rowspan="2">Автомобиль</th><?php foreach($sections as $s): ?><th colspan="4" class="event-header"><?php echo esc_html($s['section_name']); ?></th><?php endforeach; ?><th rowspan="2" class="scores-border">Итого<br>очков СУ</th></tr>
-  <tr><?php foreach($sections as $s): ?><th>КП</th><th>Баллы</th><th>Время</th><th>Статус</th><?php endforeach; ?></tr></thead>
-  <tbody><?php foreach($participants as $p): ?><tr><td class="results_place"><?php echo esc_html($p['place']); ?></td><td><?php echo esc_html($p['num']); ?></td><td><?php echo esc_html($p['participants_name']); ?></td><td><?php echo esc_html($p['car']); ?></td><?php foreach($sections as $s):$r=$section_data[(int)$s['section_id']][$p['participant_id']]??null;$st=$r?($r['final_status']?:$r['status']):'';if($r):?><td><?php echo esc_html($r['checkpoints_count']); ?></td><td><?php echo esc_html($r['final_points']); ?></td><td><?php echo esc_html($r['raw_time']?:'—'); ?></td><td <?php echo $st==='finished'?'bgcolor="PaleGreen"':'bgcolor="Coral"'; ?>><?php echo $st==='finished'?'Финишировал':($st==='dnf'?'Сход':'Дискв.'); ?></td><?php else: ?><td colspan="4">—</td><?php endif;endforeach; ?><td class="results_scores_all scores-border"><?php echo $p['has_finished']?esc_html($p['total']):'—'; ?></td></tr><?php endforeach; ?></tbody>
+  <colgroup>
+   <col class="col-place"><col class="col-number"><col class="col-crew"><col class="col-car">
+   <?php foreach($sections as $s): ?><col span="4" class="col-section"><?php endforeach; ?>
+   <col class="col-total">
+  </colgroup>
+  <thead>
+   <tr>
+    <th rowspan="2" scope="col" class="has-text-align-center">Место</th>
+    <th rowspan="2" scope="col" class="has-text-align-center">Стартовый<br>номер</th>
+    <th rowspan="2" scope="col">Фамилия Имя<br>Пилот/Штурман</th>
+    <th rowspan="2" scope="col">Автомобиль</th>
+    <?php foreach($sections as $s): ?><th colspan="4" scope="colgroup" class="event-header"><?php echo esc_html($s['section_name']); ?></th><?php endforeach; ?>
+    <th rowspan="2" scope="col" class="scores-border">Итого<br>очков СУ</th>
+   </tr>
+   <tr>
+    <?php foreach($sections as $s): ?>
+     <th scope="col">КП</th><th scope="col">Баллы</th><th scope="col">Время</th><th scope="col">Статус</th>
+    <?php endforeach; ?>
+   </tr>
+  </thead>
+  <tbody>
+   <?php foreach($participants as $p): ?>
+    <tr>
+     <td class="results_place"><?php echo esc_html($p['place']); ?></td><td><?php echo esc_html($p['num']); ?></td><td><?php echo esc_html($p['participants_name']); ?></td><td><?php echo esc_html($p['car']); ?></td>
+     <?php foreach($sections as $s):$r=$section_data[(int)$s['section_id']][$p['participant_id']]??null;$st=$r?($r['final_status']?:$r['status']):'';if($r):?><td><?php echo esc_html($r['checkpoints_count']); ?></td><td><?php echo esc_html($r['final_points']); ?></td><td><?php echo esc_html($r['raw_time']?:'—'); ?></td><td <?php echo $st==='finished'?'bgcolor="PaleGreen"':'bgcolor="Coral"'; ?>><?php echo $st==='finished'?'Финишировал':($st==='dnf'?'Сход':'Дискв.'); ?></td><?php else: ?><td colspan="4">—</td><?php endif;endforeach; ?>
+     <td class="results_scores_all scores-border"><?php echo $p['has_finished']?esc_html($p['total']):'—'; ?></td>
+    </tr>
+   <?php endforeach; ?>
+  </tbody>
  </table></figure></div><?php endif; ?>
 </div>
 <?php $html=ob_get_clean();mysqli_close($db);return $html;}
