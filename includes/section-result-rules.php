@@ -13,6 +13,36 @@ function results_stage_dash_points_id($season_id) {
     return null;
 }
 
+function results_install_section_datetime_columns() {
+    $link = db_connect();
+    $columns = mysqli_query($link, "SHOW COLUMNS FROM stage_section_results");
+    $existing = array();
+    if ($columns) while ($row = mysqli_fetch_assoc($columns)) $existing[$row['Field']] = true;
+    if (!isset($existing['start_at'])) mysqli_query($link, "ALTER TABLE stage_section_results ADD COLUMN start_at DATETIME NULL AFTER checkpoint_points");
+    if (!isset($existing['finish_at'])) mysqli_query($link, "ALTER TABLE stage_section_results ADD COLUMN finish_at DATETIME NULL AFTER start_at");
+}
+
+function results_normalize_datetime($value) {
+    $value = trim((string)$value);
+    if ($value === '') return null;
+    $value = str_replace('T', ' ', $value);
+    $dt = DateTime::createFromFormat('Y-m-d H:i:s', $value);
+    if (!$dt) $dt = DateTime::createFromFormat('Y-m-d H:i', $value);
+    if (!$dt) return false;
+    return $dt->format('Y-m-d H:i:s');
+}
+
+function results_calculate_duration($start_at, $finish_at) {
+    if (!$start_at || !$finish_at) return null;
+    try {
+        $start = new DateTime($start_at);
+        $finish = new DateTime($finish_at);
+        $seconds = $finish->getTimestamp() - $start->getTimestamp();
+        if ($seconds < 0) return false;
+        return sprintf('%02d:%02d:%02d', floor($seconds / 3600), floor(($seconds % 3600) / 60), $seconds % 60);
+    } catch (Exception $e) { return false; }
+}
+
 function results_recalculate_stage_from_sections_v2($event_id,$class_id,$season_id) {
     $link=db_connect(); $event_id=(int)$event_id; $class_id=(int)$class_id; $season_id=(int)$season_id;
     $q=mysqli_query($link,"SELECT DISTINCT participant_id FROM Results WHERE event_id=$event_id AND season_id=$season_id AND class_id=$class_id");
@@ -41,7 +71,6 @@ function results_recalculate_stage_from_sections_v2($event_id,$class_id,$season_
             $p=(int)$rank[$pid]; $point=mysqli_fetch_assoc(mysqli_query($link,"SELECT points_id FROM Pointstable WHERE season_id=$season_id AND position=$p LIMIT 1"));
             if($existing && $point) mysqli_query($link,"UPDATE Results SET points_id=".(int)$point['points_id'].", missing=0, disq=0 WHERE results_id=".(int)$existing['results_id']);
         } else {
-            // Нет ни одного финиша: место не присуждается, 0 очков, missing='-'.
             $all_dsq=$r['sections']>0 && $r['dsq'] && !$r['dnf'];
             $missing=$all_dsq?0:1; $disq=$all_dsq?1:0;
             if($existing) {
@@ -57,7 +86,7 @@ function results_recalculate_stage_from_sections_v2($event_id,$class_id,$season_
 function results_ajax_save_section_results_v2() {
     check_ajax_referer('result_settings_actions_nonce','nonce');
     if(!current_user_can('manage_options')) wp_send_json_error('Недостаточно прав');
-    results_install_stage_sections_schema(); $link=db_connect();
+    results_install_stage_sections_schema(); results_install_section_datetime_columns(); $link=db_connect();
     $section_id=absint($_POST['section_id']??0); $class_id=absint($_POST['class_id']??0); $rows=$_POST['rows']??array();
     if(!$section_id||!$class_id||!is_array($rows)) wp_send_json_error('Некорректные данные');
     $meta=mysqli_fetch_assoc(mysqli_query($link,"SELECT event_id FROM stage_sections WHERE section_id=$section_id LIMIT 1"));
@@ -65,12 +94,15 @@ function results_ajax_save_section_results_v2() {
     foreach($rows as $row) {
         $pid=absint($row['participant_id']??0); if(!$pid) continue;
         $ok=mysqli_fetch_assoc(mysqli_query($link,"SELECT participant_id FROM Results WHERE event_id=$event_id AND class_id=$class_id AND participant_id=$pid LIMIT 1")); if(!$ok) continue;
-        $cc=max(0,(int)($row['checkpoints_count']??0)); $cp=max(0,(float)($row['checkpoint_points']??0)); $time=sanitize_text_field($row['raw_time']??''); $status=sanitize_text_field($row['status']??'finished');
-        if(!in_array($status,array('finished','dnf','dsq'),true)) $status='finished';
-        if($time!=='' && results_time_to_seconds($time)===false) wp_send_json_error('Неверный формат времени. Используйте HH:MM:SS');
+        $cc=max(0,(int)($row['checkpoints_count']??0)); $cp=max(0,(float)($row['checkpoint_points']??0));
+        $start=results_normalize_datetime($row['start_at']??''); $finish=results_normalize_datetime($row['finish_at']??'');
+        if($start===false || $finish===false) wp_send_json_error('Неверный формат даты/времени старта или финиша');
+        if($start && $finish && results_calculate_duration($start,$finish)===false) wp_send_json_error('Время финиша не может быть раньше времени старта');
+        $time=results_calculate_duration($start,$finish);
+        $status=sanitize_text_field($row['status']??'finished'); if(!in_array($status,array('finished','dnf','dsq'),true)) $status='finished';
         $note=sanitize_textarea_field($row['note']??'');
-        $stmt=mysqli_prepare($link,"INSERT INTO stage_section_results (section_id,class_id,participant_id,checkpoints_count,checkpoint_points,raw_time,status,final_status,note) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE checkpoints_count=VALUES(checkpoints_count),checkpoint_points=VALUES(checkpoint_points),raw_time=VALUES(raw_time),status=VALUES(status),manual_status=NULL,final_status=VALUES(final_status),note=VALUES(note)");
-        mysqli_stmt_bind_param($stmt,'iiidssss',$section_id,$class_id,$pid,$cc,$cp,$time,$status,$status,$note); mysqli_stmt_execute($stmt); mysqli_stmt_close($stmt);
+        $stmt=mysqli_prepare($link,"INSERT INTO stage_section_results (section_id,class_id,participant_id,checkpoints_count,checkpoint_points,start_at,finish_at,raw_time,status,final_status,note) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE checkpoints_count=VALUES(checkpoints_count),checkpoint_points=VALUES(checkpoint_points),start_at=VALUES(start_at),finish_at=VALUES(finish_at),raw_time=VALUES(raw_time),status=VALUES(status),manual_status=NULL,final_status=VALUES(final_status),note=VALUES(note)");
+        mysqli_stmt_bind_param($stmt,'iiidsssssss',$section_id,$class_id,$pid,$cc,$cp,$start,$finish,$time,$status,$status,$note); mysqli_stmt_execute($stmt); mysqli_stmt_close($stmt);
     }
     results_recalculate_section($section_id,$class_id);
     $event=mysqli_fetch_assoc(mysqli_query($link,"SELECT season_id FROM Events WHERE event_id=$event_id LIMIT 1"));
@@ -98,5 +130,6 @@ function results_ajax_delete_stage_section_v2() {
 function results_install_section_result_rules_override() {
     remove_action('wp_ajax_results_save_section_results','results_ajax_save_section_results'); remove_action('wp_ajax_results_recalculate_section','results_ajax_recalculate_section'); remove_action('wp_ajax_results_delete_stage_section','results_ajax_delete_stage_section');
     add_action('wp_ajax_results_save_section_results','results_ajax_save_section_results_v2'); add_action('wp_ajax_results_recalculate_section','results_ajax_recalculate_section_v2'); add_action('wp_ajax_results_delete_stage_section','results_ajax_delete_stage_section_v2');
+    results_install_section_datetime_columns();
 }
 add_action('init','results_install_section_result_rules_override',100);
