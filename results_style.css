@@ -1,494 +1,92 @@
-:root {
-    --dark-bg: rgb(14, 14, 12);
-    --orange-amber: rgb(215, 90, 0);
-    --orange-amber-hover: rgb(235, 110, 20);
-    --white: #FFFFFF;
-    --khaki: #556B2F;
-    --dark-gray: rgb(26, 26, 24);
-    --medium-gray: #444444;
-    --light-gray: #888888;
-    --heading-color: rgb(109, 101, 84);
-    --hero-title: rgb(228, 217, 194);
-    --table-bg: rgb(20, 20, 18);
-    --table-border: rgb(40, 40, 36);
-    --table-row-even: rgb(24, 24, 22);
-    --table-row-hover: rgb(30, 30, 28);
+/* Stage results 204: stable grouped header without colspan */
+table.delivery.results-table.stage-results-204 {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
 }
 
-/* Общие стили для контейнера результатов */
-.results-container {
-    margin: 30px 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    background-color: var(--dark-bg);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+table.delivery.results-table.stage-results-204 .col-place { width: 60px; }
+table.delivery.results-table.stage-results-204 .col-number { width: 90px; }
+table.delivery.results-table.stage-results-204 .col-crew { width: 190px; }
+table.delivery.results-table.stage-results-204 .col-car { width: 110px; }
+table.delivery.results-table.stage-results-204 .col-section-cp { width: 55px; }
+table.delivery.results-table.stage-results-204 .col-section-points { width: 70px; }
+table.delivery.results-table.stage-results-204 .col-section-time { width: 90px; }
+table.delivery.results-table.stage-results-204 .col-section-status { width: 110px; }
+table.delivery.results-table.stage-results-204 .col-total { width: 90px; }
+
+table.delivery.results-table.stage-results-204 th.section-group-title,
+table.delivery.results-table.stage-results-204 th.section-group-empty {
+    background-color: var(--heading-color) !important;
+    color: var(--hero-title) !important;
+    height: 46px;
+    padding: 8px 6px;
 }
 
-/* Шапка с фильтрами и кнопкой Excel */
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background-color: var(--dark-gray);
-    border-bottom: 2px solid var(--orange-amber);
-    flex-wrap: wrap;
-    gap: 15px;
+table.delivery.results-table.stage-results-204 th.section-group-title {
+    border-right: 0 !important;
+    white-space: nowrap;
 }
 
-.excel-download .excel-btn {
-    background: var(--dark-gray);
-    border: none;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--white);
-    font-weight: 500;
+table.delivery.results-table.stage-results-204 th.section-group-empty {
+    border-left: 0 !important;
+    border-right: 0 !important;
 }
 
-.excel-download .excel-btn:hover {
-    background-color: var(--orange-amber-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(215, 90, 0, 0.2);
+table.delivery.results-table.stage-results-204 th.section-group-empty + th.section-group-empty {
+    border-left: 0 !important;
 }
 
-.class-filter-top3 {
-            padding: 8px 12px;
-            background-color: rgb(26, 26, 24);
-            border: 1px solid #444444;
-            border-radius: 4px;
-            text-decoration: none;
-            color: rgb(228, 217, 194);
-            font-size: 14px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-            position: relative;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        
-        .class-filter-top3:hover {
-            background-color: #444444;
-            border-color: #888888;
-            color: white;
-        }
-        
-        .class-filter-top3.active {
-            background-color: rgb(215, 90, 0);
-            color: white;
-            border-color: rgb(215, 90, 0);
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(215, 90, 0, 0.3);
-        }
-        
-        .season-filter {
-            padding: 8px 12px;
-            background-color: rgb(26, 26, 24);
-            border: 1px solid #444444;
-            border-radius: 4px;
-            text-decoration: none;
-            color: rgb(228, 217, 194);
-            font-size: 14px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-            position: relative;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        
-        .season-filter:hover {
-            background-color: #444444;
-            border-color: #888888;
-            color: white;
-        }
-        
-        .season-filter.active {
-            background-color: rgb(215, 90, 0);
-            color: white;
-            border-color: rgb(215, 90, 0);
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(215, 90, 0, 0.3);
-        }
-
-/* Фильтры классов */
-.class-filters {
-    display: flex;
-    flex-wrap: wrap;
-    row-gap: 5px;
-    column-gap: 0px;
+table.delivery.results-table.stage-results-204 thead tr:first-child th.section-group-title {
+    border-left: 2px solid var(--orange-amber) !important;
 }
 
-.class-filter {
-    padding: 8px 16px;
-    background-color: var(--dark-gray);
-    border: 1px solid var(--medium-gray);
-    border-radius: 4px;
-    text-decoration: none;
-    color: var(--hero-title);
-    font-size: 14px;
-    transition: all 0.3s ease;
-    font-weight: 500;
+table.delivery.results-table.stage-results-204 thead tr:first-child th.section-group-empty:last-of-type {
+    border-right: 2px solid var(--orange-amber) !important;
 }
 
-.class-filter:hover {
-    background-color: var(--medium-gray);
-    color: var(--white);
-}
-
-.class-filter.active {
-    background-color: var(--orange-amber);
-    color: var(--white);
-    border-color: var(--orange-amber);
+table.delivery.results-table.stage-results-204 td.section-status {
     font-weight: 600;
-    box-shadow: 0 2px 4px rgba(215, 90, 0, 0.3);
 }
 
-/* Таблица */
-.table-responsive {
-    overflow-x: auto;
-}
-
-/* Стили для ошибки */
-.error {
-    color: #d63638;
-    text-align: center;
-    padding: 20px;
-    background: #ffebeb;
-    border-radius: 5px;
-    margin: 20px 0;
-}
-
-
-
-/* Шапка результатов */
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-/* Кнопка Excel */
-.excel-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 3px;
-    transition: background 0.3s;
-}
-
-.excel-btn:hover {
-    background: #f0f0f0;
-}
-
-table.delivery.results-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    background: var(--table-bg);
-    color: var(--hero-title);
-}
-
-table.delivery.results-table th {
-    background-color: var(--dark-gray);
-    color: var(--orange-amber);
-    font-weight: 600;
-    padding: 14px 10px;
-    border: 1px solid var(--table-border);
-    text-align: center;
-    vertical-align: middle;
-    font-size: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-table.delivery.results-table td {
-    padding: 12px 10px;
-    border: 1px solid var(--table-border);
-    text-align: center;
-    vertical-align: middle;
-    color: var(--hero-title);
-}
-
-/* Чередование строк */
-.wp-block-table.is-style-stripes tbody tr:nth-child(even) {
-    background-color: var(--table-row-even);
-}
-
-.wp-block-table.is-style-stripes tbody tr:hover {
-    background-color: var(--table-row-hover);
-}
-
-/* Цвета для статусов */
-.results-table td[bgcolor="Coral"] {
-    background-color: rgba(215, 90, 0, 0.2) !important;
-    color: var(--orange-amber);
-    font-weight: 600;
-    border-left: 3px solid var(--orange-amber);
-}
-
-.results-table td[bgcolor="PaleGreen"] {
+table.delivery.results-table.stage-results-204 td.status-finished {
     background-color: rgba(85, 107, 47, 0.3) !important;
     color: var(--khaki);
     border-left: 3px solid var(--khaki);
 }
 
-/* Кнопки показа/скрытия деталей */
-.shScores {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background-color: var(--orange-amber);
-    color: var(--white);
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: 8px;
-    transition: all 0.3s ease;
-    font-weight: bold;
-}
-
-.shScores:hover {
-    background-color: var(--orange-amber-hover);
-    transform: scale(1.1);
-}
-
-/* Место в рейтинге */
-.results_place {
-    font-weight: bold;
+table.delivery.results-table.stage-results-204 td.status-negative {
+    background-color: rgba(215, 90, 0, 0.2) !important;
     color: var(--orange-amber);
-    font-size: 18px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    border-left: 3px solid var(--orange-amber);
 }
 
-/* Стили для индикатора загрузки */
-.loading-spinner {
-    text-align: center;
-    padding: 40px;
-    font-size: 18px;
-    color: #666;
-}
-
-/* Стили для активного фильтра */
-.class-filter.active {
-    background-color: var(--orange-amber);
-    color: white;
-}
-
-.class-filter {
-    cursor: pointer;
-    padding: 5px 15px;
-    margin: 0 5px;
-    border-radius: 3px;
-    transition: all 0.3s ease;
-}
-
-.class-filter:hover {
-    background-color: var(--orange-amber);
-}
-
-/* Стили для ошибки */
-.error {
-    color: #d63638;
-    text-align: center;
-    padding: 20px;
-}
-
-/* Итоговые баллы */
-.results_scores_all {
-    font-weight: bold;
-    color: var(--orange-amber);
-    font-size: 18px;
-    background-color: rgba(215, 90, 0, 0.1);
-    border-left: 3px solid var(--orange-amber) !important;
-}
-
-/* Специальные классы для ячеек */
-.scores-border {
-    border-right: 2px solid var(--orange-amber) !important;
-}
-
-/* Заголовки этапов */
-.event-header {
-    background-color: var(--heading-color) !important;
-    color: var(--hero-title) !important;
-}
-
-/* Адаптивность для планшетов */
-@media screen and (max-width: 1024px) {
-    .results-container {
-        margin: 20px 0;
-        border-radius: 6px;
-    }
-    
-    .results-header {
-        padding: 15px;
-    }
-    
-    table.delivery.results-table {
-        font-size: 13px;
-    }
-    
-    table.delivery.results-table th {
-        padding: 10px 6px;
-        font-size: 14px;
-    }
-    
-    table.delivery.results-table td {
-        padding: 10px 6px;
-    }
-}
-
-/* Адаптивность для мобильных */
 @media screen and (max-width: 768px) {
-    .results-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-    }
-    
-    .excel-download {
-        align-self: flex-start;
-    }
-    
-    .class-filters {
-        justify-content: center;
-    }
-    
-    .class-filter {
-        padding: 6px 12px;
-        font-size: 13px;
-    }
-    
-    .shScores {
-        width: 24px;
-        height: 24px;
-        font-size: 12px;
-    }
-    
-    .results_place,
-    .results_scores_all {
-        font-size: 16px;
-    }
-}
-
-/* Адаптивность для очень маленьких экранов */
-@media screen and (max-width: 600px) {
-    .results-container {
-        margin: 10px -10px;
-        border-radius: 0;
-        box-shadow: none;
-        border-top: 2px solid var(--orange-amber);
-        border-bottom: 2px solid var(--orange-amber);
-    }
-    
-    .results-header {
-        padding: 12px;
-    }
-    
-    .class-filters {
+    .section-results-public .table-responsive {
+        width: 100%;
+        max-width: 100%;
         overflow-x: auto;
-        justify-content: flex-start;
-        padding-bottom: 5px;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
     }
-    
-    .class-filter {
-        flex-shrink: 0;
+
+    table.delivery.results-table.stage-results-204 {
+        min-width: max-content;
+        width: max-content;
+        table-layout: auto;
     }
-    
-    table.delivery.results-table {
-        min-width: 600px;
+
+    table.delivery.results-table.stage-results-204 th,
+    table.delivery.results-table.stage-results-204 td {
+        white-space: nowrap;
     }
-    
-    /* Информационное сообщение о неучтенных этапах */
-    .results-info {
-        padding: 12px;
-        background-color: var(--dark-gray);
-        border-left: 4px solid var(--orange-amber);
+
+    table.delivery.results-table.stage-results-204 th {
+        padding: 10px 7px;
         font-size: 13px;
-        color: var(--light-gray);
-        line-height: 1.5;
     }
-    
-    .results-info p {
-        margin: 0;
+
+    table.delivery.results-table.stage-results-204 td {
+        padding: 10px 7px;
     }
-}
-
-/* Стили для дополнительных элементов */
-.results-table caption {
-    caption-side: bottom;
-    padding: 15px;
-    color: var(--light-gray);
-    font-size: 13px;
-    text-align: left;
-    background-color: var(--dark-gray);
-    border-top: 1px solid var(--table-border);
-}
-
-/* Стили для пустых ячеек */
-.results-table td:empty::before {
-    content: "—";
-    color: var(--light-gray);
-}
-
-/* Стили для заголовков с коэффициентами */
-.coefficient-note {
-    font-size: 11px;
-    color: var(--light-gray);
-    display: block;
-    margin-top: 2px;
-    font-weight: normal;
-}
-
-/* Анимация появления строк */
-@keyframes fadeInRow {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.results-table tbody tr {
-    animation: fadeInRow 0.3s ease forwards;
-}
-
-.results-table tbody tr:nth-child(2) { animation-delay: 0.05s; }
-.results-table tbody tr:nth-child(3) { animation-delay: 0.1s; }
-.results-table tbody tr:nth-child(4) { animation-delay: 0.15s; }
-.results-table tbody tr:nth-child(5) { animation-delay: 0.2s; }
-.results-table tbody tr:nth-child(6) { animation-delay: 0.25s; }
-.results-table tbody tr:nth-child(7) { animation-delay: 0.3s; }
-.results-table tbody tr:nth-child(8) { animation-delay: 0.35s; }
-
-/* Стили для индикатора минимального количества участников */
-.min-participants-warning {
-    display: inline-block;
-    background-color: rgba(215, 90, 0, 0.1);
-    color: var(--orange-amber);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 11px;
-    margin-left: 5px;
-    border: 1px solid rgba(215, 90, 0, 0.3);
 }
