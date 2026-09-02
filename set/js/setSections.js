@@ -239,11 +239,14 @@ jQuery(function ($) {
 
             const rows = participants.map(function (participant) {
                 const result = saved[participant.participant_id] || {};
+                const checkpointPoints = parseFloat(result.checkpoint_points || 0);
+                const penaltyPoints = parseFloat(result.penalty_points || 0);
 
                 return '<tr data-pid="' + participant.participant_id + '">' +
                     '<td>№' + participant.num + ' ' + participant.participants_name + '</td>' +
                     '<td><input class="cc" type="number" min="0" value="' + (result.checkpoints_count || 0) + '"></td>' +
-                    '<td><input class="cp" type="number" min="0" step="0.01" value="' + (result.checkpoint_points || 0) + '"></td>' +
+                    '<td><input class="cp" type="number" min="0" step="0.01" value="' + checkpointPoints + '"></td>' +
+                    '<td><input class="penalty" type="number" min="0" step="0.01" value="' + penaltyPoints + '"></td>' +
                     '<td><input class="startAt" type="datetime-local" value="' +
                         (result.start_at ? result.start_at.replace(' ', 'T').slice(0, 16) : '') + '"></td>' +
                     '<td><input class="finishAt" type="datetime-local" value="' +
@@ -260,7 +263,7 @@ jQuery(function ($) {
                 '<div class="results-admin-table-scroll">' +
                     '<table class="admin_table">' +
                         '<thead><tr>' +
-                            '<th>Экипаж</th><th>КП</th><th>Баллы КП</th>' +
+                            '<th>Экипаж</th><th>КП</th><th>Баллы КП</th><th>Штраф</th>' +
                             '<th>Старт</th><th>Финиш</th><th>Время</th>' +
                             '<th>Статус</th><th>Место</th><th>Очки СУ</th>' +
                         '</tr></thead>' +
@@ -300,10 +303,16 @@ jQuery(function ($) {
         const rows = [];
 
         $('#resultsBox tr[data-pid]').each(function () {
+            const grossPoints = parseFloat($(this).find('.cp').val() || 0);
+            const penaltyPoints = parseFloat($(this).find('.penalty').val() || 0);
+            const netPoints = grossPoints - penaltyPoints;
+
             rows.push({
                 participant_id: $(this).data('pid'),
                 checkpoints_count: $(this).find('.cc').val(),
-                checkpoint_points: $(this).find('.cp').val(),
+                // В checkpoint_points сохраняем уже итоговые баллы КП после вычета штрафа.
+                checkpoint_points: netPoints,
+                penalty_points: penaltyPoints,
                 start_at: $(this).find('.startAt').val(),
                 finish_at: $(this).find('.finishAt').val(),
                 status: $(this).find('.st').val()
