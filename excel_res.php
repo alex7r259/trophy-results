@@ -8,6 +8,9 @@ $season_id = htmlspecialchars($_GET["season_id"]);
 // Подключение к базе данных
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
 
 // Создаем новый Excel документ
 $objPHPExcel = new PHPExcel();
@@ -67,7 +70,7 @@ foreach ($rows_cl as $class) {
     $objWorksheet->setTitle(substr($class_name, 0, 31)); // Ограничение длины названия листа
     
     // Формирование SQL запроса для участников
-    $sql = "SELECT p.participant_id, p.participants_name, p.car, p.num";
+    $sql = "SELECT p.participant_id, p.participants_name, p.city, p.car, p.num";
     $i=1;
     foreach ($rows_ev as $k){
         $sql .= ", MAX(CASE WHEN e.event_id = ".$k['event_id']." THEN pt.position ELSE '-' END) AS e{$i}_position,
@@ -145,7 +148,7 @@ foreach ($rows_cl as $class) {
     
     // Заголовки таблицы
     $headers = [
-        'Место', '№', 'Пилот', 'Автомобиль', 
+        'Место', '№', 'Пилот', 'Город', 'Автомобиль', 
         'Сумма баллов'
     ];
     
@@ -187,7 +190,7 @@ foreach ($rows_cl as $class) {
     }
     
     // Устанавливаем ширину для колонок с баллами
-    $pointsColumns = ['E']; // Колонки "Сумма баллов"
+    $pointsColumns = ['F']; // Колонки "Сумма баллов"
     foreach ($pointsColumns as $col) {
         $objWorksheet->getColumnDimension($col)->setWidth(9);
     }
@@ -195,8 +198,8 @@ foreach ($rows_cl as $class) {
     // Также устанавливаем ширину для колонок с очками по этапам
     for ($i = 0; $i < $count_event; $i++) {
         // Каждый этап занимает 2 колонки, очки - вторая из них
-        $pointsCol1 = PHPExcel_Cell::stringFromColumnIndex(5 + $i * 2);
-        $pointsCol2 = PHPExcel_Cell::stringFromColumnIndex(5 + $i * 2 + 1);
+        $pointsCol1 = PHPExcel_Cell::stringFromColumnIndex(6 + $i * 2);
+        $pointsCol2 = PHPExcel_Cell::stringFromColumnIndex(6 + $i * 2 + 1);
         array_push($pointsColumns, $pointsCol1);
         array_push($pointsColumns, $pointsCol2);
         $objWorksheet->getColumnDimension($pointsCol1)->setWidth(9);
@@ -214,6 +217,7 @@ foreach ($rows_cl as $class) {
         $objWorksheet->setCellValueByColumnAndRow($col++, $rowNumber, $m);
         $objWorksheet->setCellValueByColumnAndRow($col++, $rowNumber, $row['num']);
         $objWorksheet->setCellValueByColumnAndRow($col++, $rowNumber, $row['participants_name']);
+        $objWorksheet->setCellValueByColumnAndRow($col++, $rowNumber, $row['city']);
         $objWorksheet->setCellValueByColumnAndRow($col++, $rowNumber, $row['car']);
         $objWorksheet->setCellValueByColumnAndRow($col++, $rowNumber, $row['sum']);
         

@@ -13,6 +13,17 @@ function results_show_single_event($atts) {
     if ($db->connect_error) {
         return "Ошибка подключения к базе данных";
     }
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($db);
+    }
+
+    if (function_exists('results_render_section_stage_protocol')) {
+        $section_protocol = results_render_section_stage_protocol((int)$params['event_id'], (int)$params['season_id'], $params['class_name']);
+        if ($section_protocol !== '') {
+            $db->close();
+            return $section_protocol;
+        }
+    }
 
     // Получаем список классов
     $classes = $db->query("SELECT class_name FROM class WHERE season_id = ".(int)$params['season_id'])
@@ -33,7 +44,8 @@ function results_show_single_event($atts) {
     // Формируем SQL запрос
     $select_fields = [
         "p.participant_id",
-        "p.participants_name", 
+        "p.participants_name",
+        "p.city", 
         "p.num",
         "p.car"
     ];
@@ -59,7 +71,7 @@ function results_show_single_event($atts) {
         JOIN Participants p ON er.participant_id = p.participant_id
         JOIN Class c ON er.class_id = c.class_id
         WHERE c.class_name = '%s' AND er.event_id = %d
-        GROUP BY p.participant_id, p.participants_name, p.num, p.car
+        GROUP BY p.participant_id, p.participants_name, p.city, p.num, p.car
         ORDER BY total_scores DESC, total_time ASC",
         implode(', ', array_merge($select_fields, $case_statements)),
         $db->real_escape_string($params['class_name']),
@@ -93,6 +105,7 @@ function results_show_single_event($atts) {
         'place' => true,
         'num' => !empty(array_column($participants, 'num')),
         'participants_name' => true,
+        'city' => !empty(array_filter(array_column($participants, 'city'))),
         'car' => !empty(array_column($participants, 'car'))
     ];
     
@@ -111,6 +124,9 @@ function results_show_single_event($atts) {
                         <th class="has-text-align-center" rowspan="2">№</th>
                     <?php endif; ?>
                     <th class="has-text-align-center" rowspan="2">Участник</th>
+                    <?php if ($visible_columns['city']): ?>
+                        <th class="has-text-align-center" rowspan="2">Город</th>
+                    <?php endif; ?>
                     <?php if ($visible_columns['car']): ?>
                         <th class="has-text-align-center" rowspan="2">Автомобиль</th>
                     <?php endif; ?>
@@ -152,6 +168,9 @@ function results_show_single_event($atts) {
                             <td class="has-text-align-center"><?= esc_html($row['num']) ?></td>
                         <?php endif; ?>
                         <td class="has-text-align-center"><?= esc_html($row['participants_name']) ?></td>
+                        <?php if ($visible_columns['city']): ?>
+                            <td class="has-text-align-center"><?= esc_html($row['city'] ?? '') ?></td>
+                        <?php endif; ?>
                         <?php if ($visible_columns['car']): ?>
                             <td class="has-text-align-center"><?= esc_html($row['car']) ?></td>
                         <?php endif; ?>

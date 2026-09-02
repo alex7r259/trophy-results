@@ -52,19 +52,20 @@ jQuery(document).ready(function($) {
                         },
                         success: function(response) {
                             if (response.success) {
-                                var div = '<table id="data_events" class="admin_table"><thead><tr><th>п/п</th><th name="participants_name">Фамилия имя пилота/штурмана</th><th name="car">Авто</th><th name="num">Стартовый номер</th><th name="delete"></th></tr></thead><tbody>';
+                                var div = '<table id="data_events" class="admin_table"><thead><tr><th>п/п</th><th name="participants_name">Фамилия имя пилота/штурмана</th><th name="city">Город</th><th name="car">Авто</th><th name="num">Стартовый номер</th><th name="delete"></th></tr></thead><tbody>';
                                 response.data.sort(SortByName);
                                 $.each(response.data, function(index, data) {
                                     div += '<tr id="' + data.participant_id + '">' +
                                            '<td>' + (index + 1) + '</td>' +
                                            '<td id="name' + data.participant_id + '">' + data.participants_name + '</td>' +
+                                           '<td id="city' + data.participant_id + '">' + (data.city || '') + '</td>' +
                                            '<td id="car' + data.participant_id + '">' + data.car + '</td>' +
                                            '<td id="num' + data.participant_id + '">' + data.num + '</td>' +
                                            '<td id="del' + data.participant_id + '">🗑</td>' +
                                            '</tr>';
                                 });
                                 
-                                div += '<tr><td>+</td><td id="foot"><input type="text" id="name" style="line-height: 1; min-height: 20px; max-width: 150px;"></td><td id="foot"><input type="text" id="car" style="line-height: 1; min-height: 20px; max-width: 100px;"></td><td id="foot"><input type="number" min="1" id="num" style="line-height: 1; min-height: 20px; max-width: 70px;"></td><td id="foot"><p id="save_new">💾</p></td></tr>';
+                                div += '<tr><td>+</td><td id="foot"><input type="text" id="name" style="line-height: 1; min-height: 20px; max-width: 150px;"></td><td id="foot"><input type="text" id="city" style="line-height: 1; min-height: 20px; max-width: 120px;"></td><td id="foot"><input type="text" id="car" style="line-height: 1; min-height: 20px; max-width: 100px;"></td><td id="foot"><input type="number" min="1" id="num" style="line-height: 1; min-height: 20px; max-width: 70px;"></td><td id="foot"><p id="save_new">💾</p></td></tr>';
                                 
                                 div += '</tbody></table>';
                                 $('#table_events').html(div);
@@ -119,6 +120,7 @@ jQuery(document).ready(function($) {
                                         var variables = {
                                             participants_name: $('#name').val(),
                                             season_id: season_id,
+                                            city: $('#city').val(),
                                             car: $('#car').val(),
                                             num: $('#num').val()
                                             
@@ -173,7 +175,7 @@ jQuery(document).ready(function($) {
                                     var type;
                                     var min;
                                     
-                                    if (col_name == 'participants_name' || col_name == 'car'){
+                                    if (col_name == 'participants_name' || col_name == 'city' || col_name == 'car'){
                                         type = 'text';
                                     }else if(col_name == 'num'){
                                         type = 'number';

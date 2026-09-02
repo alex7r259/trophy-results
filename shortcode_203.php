@@ -177,6 +177,9 @@ $(function(){
 // Функция для получения текущего сезона
 function get_season() {
     $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
     // Получение данных о сезоне
     $season_id = mysqli_fetch_row(mysqli_query($link, "SELECT * FROM appsettings"));
     // Получение данных о сезоне
@@ -192,6 +195,9 @@ function get_season() {
 function get_top3_classes($season_id) {
     
     $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
     $rows_cl = mysqli_fetch_all(
         mysqli_query($link, "SELECT * FROM class WHERE season_id = '$season_id'"),
         MYSQLI_ASSOC
@@ -211,6 +217,9 @@ function get_top3_classes($season_id) {
 // Функция для получения данных топа-3
 function get_top3_data($season_id, $class_name) {
     $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+    if (function_exists('results_ensure_participants_city_column')) {
+        results_ensure_participants_city_column($link);
+    }
 
     $season_id  = (int)$season_id;
     $class_name = mysqli_real_escape_string($link, $class_name);
@@ -253,7 +262,7 @@ function get_top3_data($season_id, $class_name) {
     }
     
     // Формирование SQL запроса
-    $sql = "SELECT p.participant_id, p.participants_name, p.car, p.num, s.countPart";
+    $sql = "SELECT p.participant_id, p.participants_name, p.city, p.car, p.num, s.countPart";
     $i = 1;
     
     foreach ($rows_ev as $k) {
@@ -371,6 +380,7 @@ function generate_top3_table_html($data, $class_name) {
                 $podium_class = isset($podium_classes[$place]) ? $podium_classes[$place] : '';
             ?>
             <tr class="<?php echo $podium_class; ?>">
+                <td>—</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>

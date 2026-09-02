@@ -45,11 +45,14 @@ function results_allowed_columns_for_table($table) {
     $columns = array(
         'appsettings' => array('id', 'season_id', 'event_id', 'pass'),
         'events' => array('event_id', 'event_name', 'event_date', 'season_id', 'coefficient'),
-        'participants' => array('participant_id', 'participants_name', 'season_id', 'car', 'num'),
+        'participants' => array('participant_id', 'participants_name', 'season_id', 'car', 'num', 'city'),
         'seasons' => array('season_id', 'season_name', 'countPlace', 'countPart'),
         'results' => array('results_id', 'season_id', 'event_id', 'class_id', 'participant_id', 'points_id', 'missing', 'disq'),
         'class' => array('class_id', 'class_name', 'season_id'),
         'pointstable' => array('points_id', 'season_id', 'position', 'points'),
+        'stage_sections' => array('section_id', 'event_id', 'section_number', 'section_name', 'description', 'scoring_type', 'points_source', 'uses_checkpoint_points', 'max_checkpoints', 'max_time', 'rules_config'),
+        'stage_section_categories' => array('id', 'section_id', 'class_id', 'display_order', 'scoring_type_override', 'rules_config_override'),
+        'stage_section_results' => array('section_result_id', 'section_id', 'class_id', 'participant_id', 'checkpoints_count', 'checkpoint_points', 'raw_time', 'penalty_points', 'penalty_time', 'calculated_place', 'calculated_points', 'manual_place', 'manual_points', 'final_place', 'final_points', 'status', 'manual_status', 'final_status', 'note'),
     );
 
     return $columns[$table] ?? array();
@@ -62,6 +65,26 @@ function results_validate_table_column($table, $column = null) {
     }
 
     return $column === null || in_array($column, $allowed_columns, true);
+}
+
+
+function results_participants_city_column_exists($link) {
+    $result = mysqli_query($link, "SHOW COLUMNS FROM `participants` LIKE 'city'");
+    $exists = $result && mysqli_num_rows($result) > 0;
+    if ($result) {
+        mysqli_free_result($result);
+    }
+
+    return $exists;
+}
+
+function results_ensure_participants_city_column($link) {
+    if (results_participants_city_column_exists($link)) {
+        return true;
+    }
+
+    mysqli_query($link, "ALTER TABLE `participants` ADD `city` VARCHAR(255) NOT NULL DEFAULT '' AFTER `participants_name`");
+    return true;
 }
 
 function results_settings() {
@@ -136,6 +159,15 @@ function results_settings() {
         'manage_options',
         'results_result',
         'results_settings_result'
+    );
+
+    add_submenu_page(
+        'results',
+        'Подробные результаты СУ',
+        'Результаты СУ',
+        'manage_options',
+        'results_sections',
+        'results_settings_sections'
     );    
     
     add_action('admin_enqueue_scripts', 'results_admin_assets');
@@ -148,6 +180,7 @@ function results_settings() {
     add_action('admin_enqueue_scripts', 'add_result_admin_scripts');
     add_action('admin_enqueue_scripts', 'add_class_admin_scripts');
     add_action('admin_enqueue_scripts', 'add_point_admin_scripts');
+    add_action('admin_enqueue_scripts', 'add_sections_admin_scripts');
     
 }
 
@@ -195,6 +228,9 @@ function load_table() {
     }
     try {
         $link = mysqli_connect("localhost", "j84588200_result", "?fYt3K7yGaqv", "j84588200_results");
+        if ($table === 'participants') {
+            results_ensure_participants_city_column($link);
+        }
         $query = mysqli_query($link, 
             "SELECT * FROM " . $table . " WHERE " . $col . " = " . $id
         );
@@ -237,7 +273,7 @@ function load_table_result() {
         }
 
         // Подготавливаем SQL-запрос с параметрами (защита от SQL-инъекций)
-        $query = "SELECT r.results_id, r.missing, r.disq, p.participant_id, p.participants_name, p.car, p.num, 
+        $query = "SELECT r.results_id, r.missing, r.disq, p.participant_id, p.participants_name, p.city, p.car, p.num, 
                          pt.points, pt.points_id, pt.position, e.coefficient
                   FROM Results r
                   JOIN Participants p ON r.participant_id = p.participant_id
@@ -299,6 +335,9 @@ function col_delete() {
         $link = db_connect(); // Ваша функция подключения
         if (!$link) {
             throw new Exception('Ошибка подключения к базе данных');
+        }
+        if ($table === 'participants') {
+            results_ensure_participants_city_column($link);
         }
         // Подготовленный запрос (только значение id параметризуется)
         $query = "DELETE FROM `{$table}` WHERE `{$col}` = ?";
@@ -363,6 +402,9 @@ function col_save() {
         if (!$link) {
             throw new Exception('Ошибка подключения к базе данных');
         }
+        if ($table === 'participants') {
+            results_ensure_participants_city_column($link);
+        }
         // Создаем SQL-запрос
         $sql = sprintf(
             "INSERT INTO `%s` (%s) VALUES (%s)",
@@ -419,6 +461,9 @@ function update_table() {
     $link = db_connect();
     if (!$link) {
         wp_send_json_error('Ошибка подключения к базе данных', 500);
+    }
+    if ($table === 'participants') {
+        results_ensure_participants_city_column($link);
     }
     
     try {
@@ -551,3 +596,4 @@ include 'set/setApp.php';
 include 'set/setResult.php';
 include 'set/setClass.php';
 include 'set/setPoint.php';
+include 'set/setSections.php';
