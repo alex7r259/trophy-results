@@ -56,6 +56,51 @@ function results_penalty_ensure_columns() {
     if (!isset($columns['finish_at'])) mysqli_query($link, "ALTER TABLE stage_section_results ADD COLUMN finish_at DATETIME NULL AFTER start_at");
 }
 
+/**
+ * После стандартного пересчёта этапа убираем место и очки у экипажей,
+ * у которых нет ни одного финишированного СУ.
+ *
+ * Это важно: стандартный пересчёт сортирует такие экипажи с суммой 0
+ * и может выдать им последнее место и очки. По правилам такой экипаж
+ * должен иметь missing=1 и не получать очки этапа.
+ */
+function results_penalty_clear_all_dnf_stage_results($event_id, $class_id, $season_id) {
+    $link = db_connect();
+    $event_id = (int)$event_id;
+    $class_id = (int)$class_id;
+    $season_id = (int)$season_id;
+
+    $sql = "SELECT p.participant_id,
+                   SUM(CASE WHEN sr.final_status='finished' THEN 1 ELSE 0 END) finished_sections
+            FROM Participants p
+            JOIN stage_section_results sr
+              ON sr.participant_id=p.participant_id
+             AND sr.class_id=$class_id
+            JOIN stage_sections ss
+              ON ss.section_id=sr.section_id
+             AND ss.event_id=$event_id
+            WHERE p.season_id=$season_id
+            GROUP BY p.participant_id";
+
+    $res = mysqli_query($link, $sql);
+    if (!$res) return;
+
+    while ($row = mysqli_fetch_assoc($res)) {
+        if ((int)$row['finished_sections'] > 0) continue;
+
+        $participant_id = (int)$row['participant_id'];
+        mysqli_query($link, "
+            UPDATE Results
+            SET points_id=NULL, missing=1
+            WHERE season_id=$season_id
+              AND event_id=$event_id
+              AND class_id=$class_id
+              AND participant_id=$participant_id
+              AND disq=0
+        ");
+    }
+}
+
 function results_recalculate_section_with_penalty($section_id, $class_id) {
     $link = db_connect();
     $section_id = (int)$section_id;
@@ -118,88 +163,14 @@ function results_recalculate_section_with_penalty($section_id, $class_id) {
         mysqli_stmt_close($stmt);
     }
 
+    // Сначала выполняем существующий пересчёт этапа, чтобы сохранить всю
+    // текущую логику начисления очков за сумму СУ.
     results_recalculate_stage_from_sections((int)$meta['event_id'], $class_id, (int)$meta['season_id']);
+
+    // Затем исправляем только случай «сход на всех СУ».
+    results_penalty_clear_all_dnf_stage_results((int)$meta['event_id'], $class_id, (int)$meta['season_id']);
+
     return true;
-}
-
-/**
- * Пересчитывает итог этапа по баллам, начисленным за отдельные СУ.
- * Важно: экипаж, у которого нет ни одного финишированного СУ,
- * не получает место и очки этапа и помечается missing=1 в Results.
- * Если хотя бы одно СУ завершено, экипаж участвует в итоговом
- * ранжировании этапа по сумме final_points.
- */
-function results_recalculate_stage_from_sections_with_dnf_fix($event_id, $class_id, $season_id) {
-    $link = db_connect();
-    $event_id = (int)$event_id;
-    $class_id = (int)$class_id;
-    $season_id = (int)$season_id;
-    $points = results_get_points_by_position($season_id);
-
-    $sql = "SELECT p.participant_id,
-                   COALESCE(SUM(CASE WHEN sr.final_status='finished' THEN sr.final_points ELSE 0 END),0) section_total,
-                   SUM(CASE WHEN sr.final_status='finished' THEN 1 ELSE 0 END) finished_sections
-            FROM Participants p
-            JOIN stage_section_results sr
-              ON sr.participant_id=p.participant_id
-             AND sr.class_id=$class_id
-            JOIN stage_sections ss
-              ON ss.section_id=sr.section_id
-             AND ss.event_id=$event_id
-            WHERE p.season_id=$season_id
-            GROUP BY p.participant_id
-            ORDER BY section_total DESC, p.num ASC";
-
-    $all_rows = mysqli_fetch_all(mysqli_query($link, $sql), MYSQLI_ASSOC);
-
-    // Сначала сбрасываем результат этапа для экипажей, у которых все СУ имеют сход/другой незачётный статус.
-    foreach ($all_rows as $row) {
-        $participant_id = (int)$row['participant_id'];
-        if ((int)$row['finished_sections'] > 0) continue;
-
-        $exists = mysqli_fetch_assoc(mysqli_query($link, "
-            SELECT results_id, disq
-            FROM Results
-            WHERE season_id=$season_id AND event_id=$event_id AND class_id=$class_id AND participant_id=$participant_id
-            LIMIT 1
-        "));
-        if ($exists && (int)$exists['disq'] === 0) {
-            mysqli_query($link, "UPDATE Results SET points_id=NULL, missing=1 WHERE results_id=".(int)$exists['results_id']);
-        }
-    }
-
-    // В итоговое ранжирование этапа попадают только экипажи хотя бы с одним финишированным СУ.
-    $rows = array_values(array_filter($all_rows, function($row) {
-        return (int)$row['finished_sections'] > 0;
-    }));
-
-    $prev = null;
-    $place = 0;
-    foreach ($rows as $i => $row) {
-        $same = $prev !== null && (float)$row['section_total'] === (float)$prev;
-        $place = $same ? $place : $i + 1;
-        $prev = (float)$row['section_total'];
-
-        $point_id_row = mysqli_fetch_assoc(mysqli_query($link, "SELECT points_id FROM Pointstable WHERE season_id=$season_id AND position=$place LIMIT 1"));
-        if (!$point_id_row) continue;
-
-        $point_id = (int)$point_id_row['points_id'];
-        $participant_id = (int)$row['participant_id'];
-        $exists = mysqli_fetch_assoc(mysqli_query($link, "
-            SELECT results_id, disq
-            FROM Results
-            WHERE season_id=$season_id AND event_id=$event_id AND class_id=$class_id AND participant_id=$participant_id
-            LIMIT 1
-        "));
-
-        if ($exists) {
-            if ((int)$exists['disq'] === 0) {
-                mysqli_query($link, "UPDATE Results SET points_id=$point_id, missing=0 WHERE results_id=".(int)$exists['results_id']);
-            }
-        } else {
-            mysqli_query($link, "INSERT INTO Results (season_id,event_id,class_id,participant_id,points_id,missing,disq) VALUES ($season_id,$event_id,$class_id,$participant_id,$point_id,0,0)");
-        }
-    }
 }
 
 function results_ajax_save_section_results_with_penalty() {
@@ -291,16 +262,4 @@ add_action('init', function() {
     remove_action('wp_ajax_results_recalculate_section', 'results_ajax_recalculate_section');
     add_action('wp_ajax_results_save_section_results', 'results_ajax_save_section_results_with_penalty');
     add_action('wp_ajax_results_recalculate_section', 'results_ajax_recalculate_section_with_penalty');
-
-    // Подменяем итоговый пересчёт этапа на версию, которая корректно обрабатывает DNF на всех СУ.
-    if (function_exists('results_recalculate_stage_from_sections')) {
-        remove_action('results_recalculate_stage_from_sections', 'results_recalculate_stage_from_sections');
-    }
 }, 20);
-
-// Перенаправляем вызовы из пересчёта СУ на исправленный пересчёт этапа.
-if (!function_exists('results_recalculate_stage_from_sections_original')) {
-    function results_recalculate_stage_from_sections_original($event_id, $class_id, $season_id) {
-        return results_recalculate_stage_from_sections_with_dnf_fix($event_id, $class_id, $season_id);
-    }
-}
