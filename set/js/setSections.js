@@ -86,13 +86,12 @@ jQuery(function ($) {
 
             const rows = participants.map(function (participant) {
                 const result = saved[participant.participant_id] || {};
-                const netPoints = parseFloat(result.checkpoint_points || 0);
+                const checkpointPoints = parseFloat(result.checkpoint_points || 0);
                 const penaltyPoints = parseFloat(result.penalty_points || 0);
-                const grossPoints = netPoints + penaltyPoints;
                 return '<tr data-pid="' + participant.participant_id + '">' +
                     '<td>№' + participant.num + ' ' + participant.participants_name + '</td>' +
                     '<td><input class="cc" type="number" min="0" value="' + (result.checkpoints_count || 0) + '"></td>' +
-                    '<td><input class="cp" type="number" min="0" step="0.01" value="' + grossPoints + '"></td>' +
+                    '<td><input class="cp" type="number" min="0" step="0.01" value="' + checkpointPoints + '"></td>' +
                     '<td><input class="penalty" type="number" min="0" step="0.01" value="' + penaltyPoints + '"></td>' +
                     '<td><input class="startAt" type="datetime-local" value="' + (result.start_at ? result.start_at.replace(' ', 'T').slice(0, 16) : '') + '"></td>' +
                     '<td><input class="finishAt" type="datetime-local" value="' + (result.finish_at ? result.finish_at.replace(' ', 'T').slice(0, 16) : '') + '"></td>' +
@@ -113,12 +112,12 @@ jQuery(function ($) {
     function saveRows() {
         const rows = [];
         $('#resultsBox tr[data-pid]').each(function () {
-            const grossPoints = parseFloat($(this).find('.cp').val() || 0);
-            const penaltyPoints = parseFloat($(this).find('.penalty').val() || 0);
+            const checkpointPoints = Math.max(0, parseFloat($(this).find('.cp').val() || 0));
+            const penaltyPoints = Math.max(0, parseFloat($(this).find('.penalty').val() || 0));
             rows.push({
                 participant_id: $(this).data('pid'),
                 checkpoints_count: $(this).find('.cc').val(),
-                checkpoint_points: grossPoints - penaltyPoints,
+                checkpoint_points: checkpointPoints,
                 penalty_points: penaltyPoints,
                 start_at: $(this).find('.startAt').val(),
                 finish_at: $(this).find('.finishAt').val(),
