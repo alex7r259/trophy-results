@@ -167,13 +167,13 @@ function results_show_stage_sections($atts) {
 <th rowspan="2" scope="col" class="has-text-align-center">Стартовый<br>номер</th>
 <th rowspan="2" scope="col">Фамилия Имя<br>Пилот/Штурман</th>
 <th rowspan="2" scope="col">Автомобиль</th>
-<?php foreach($sections as $s): ?><th colspan="4" class="event-header"><?php echo esc_html($s['section_name']); ?></th><?php endforeach; ?>
+<?php foreach($sections as $s): ?><th colspan="4"><?php echo esc_html($s['section_name']); ?></th><?php endforeach; ?>
 <th rowspan="2" scope="col" class="scores-border">Всего<br>баллов</th>
 <th rowspan="2" scope="col" class="has-text-align-center">Место</th>
 </tr>
 <tr>
 <?php foreach($sections as $s): ?>
-<th scope="col">КП</th><th scope="col">Штраф</th><th scope="col">Время</th><th scope="col">Баллы</th>
+<th scope="col">КП</th><th scope="col">Время</th><th scope="col">Штраф</th><th scope="col">Баллы</th>
 <?php endforeach; ?>
 </tr>
 </thead>
@@ -186,8 +186,8 @@ $r=$section_data[(int)$s['section_id']][$p['participant_id']]??null;
 $st=$r?($r['final_status']?:$r['status']):'';
 if($r): ?>
 <td><?php echo esc_html($r['checkpoints_count']); ?></td>
-<td><?php echo ((float)$r['penalty_points'] != 0) ? esc_html(rtrim(rtrim(number_format((float)$r['penalty_points'], 2, '.', ''), '0'), '.')) : '—'; ?></td>
 <td><?php echo esc_html($r['raw_time']?:'—'); ?></td>
+<td><?php echo ((float)$r['penalty_points'] != 0) ? esc_html(rtrim(rtrim(number_format((float)$r['penalty_points'], 2, '.', ''), '0'), '.')) : '—'; ?></td>
 <td <?php echo $st==='finished'?'bgcolor="PaleGreen"':'bgcolor="Coral"'; ?>><?php echo $st==='finished'?esc_html($r['final_points']):($st==='dnf'?'Сход':'Дискв.'); ?></td>
 <?php else: ?><td colspan="4">—</td><?php endif; endforeach; ?>
 <td class="results_scores_all scores-border"><?php echo $p['has_finished']?esc_html($p['total']):'—'; ?></td>
@@ -229,7 +229,6 @@ if (!empty($params['render_scripts'])) {
             var newContainer = doc.querySelector(".section-results-public");
             if(!newContainer) throw new Error("Некорректный ответ сервера");
             container.replaceWith(newContainer);
-            window.history.pushState({}, "", link.href);
         })
         .catch(function(error){
             console.error("results_204:", error);
